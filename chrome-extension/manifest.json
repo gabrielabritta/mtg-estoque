@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "MTG Estoque · LigaMagic",
+  "version": "1.0",
+  "description": "Copia as compras da LigaMagic (Meus Pedidos) para colar no MTG Estoque.",
+  "permissions": ["scripting", "clipboardWrite"],
+  "host_permissions": ["https://www.ligamagic.com.br/*"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "Copiar compras (MTG Estoque)",
+    "default_icon": { "16": "icon16.png", "32": "icon32.png", "48": "icon48.png", "128": "icon128.png" }
+  },
+  "icons": { "16": "icon16.png", "32": "icon32.png", "48": "icon48.png", "128": "icon128.png" }
+}

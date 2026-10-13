@@ -1,0 +1,248 @@
+<Window x:Class="MtgEstoque.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:MtgEstoque"
+        Title="MTG Estoque" Width="1400" Height="840" MinWidth="1000" MinHeight="640" Background="{DynamicResource Bg}"
+        FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="13" Foreground="{DynamicResource Text}"
+        WindowStartupLocation="CenterScreen" PreviewKeyDown="Window_PreviewKeyDown"
+        BorderBrush="{DynamicResource Border}" BorderThickness="1" StateChanged="Window_StateChanged">
+  <!-- sem barra de título do Windows: o topo do app arrasta a janela e os botões são nossos -->
+  <WindowChrome.WindowChrome>
+    <WindowChrome CaptionHeight="44" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0" UseAeroCaptionButtons="False"/>
+  </WindowChrome.WindowChrome>
+  <Window.Resources>
+    <Style x:Key="CaptionBtn" TargetType="Button">
+      <Setter Property="Width" Value="46"/>
+      <Setter Property="Height" Value="32"/>
+      <Setter Property="FontFamily" Value="Segoe Fluent Icons, Segoe MDL2 Assets"/>
+      <Setter Property="FontSize" Value="10"/>
+      <Setter Property="Foreground" Value="{DynamicResource Text}"/>
+      <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True"/>
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="b" Background="Transparent">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="b" Property="Background" Value="{DynamicResource Hover}"/></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="CloseBtn" TargetType="Button" BasedOn="{StaticResource CaptionBtn}">
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="b" Background="Transparent">
+              <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True">
+                <Setter TargetName="b" Property="Background" Value="#C42B1C"/>
+                <Setter Property="Foreground" Value="White"/>
+              </Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <local:GroupSummaryConv x:Key="GroupSummary"/>
+    <!-- binders: cabeçalho simples -->
+    <GroupStyle x:Key="PlainGroup">
+      <GroupStyle.HeaderTemplate>
+        <DataTemplate>
+          <TextBlock Margin="8,16,0,6" FontWeight="SemiBold">
+            <Run Text="{Binding Name, Mode=OneWay}"/><Run Text="  ·  " Foreground="{DynamicResource Muted}"/><Run Text="{Binding ItemCount, Mode=OneWay}" Foreground="{DynamicResource Muted}"/>
+          </TextBlock>
+        </DataTemplate>
+      </GroupStyle.HeaderTemplate>
+    </GroupStyle>
+    <!-- Geral: carta com várias artes vira grupo com setinha; carta com uma arte é só a linha -->
+    <GroupStyle x:Key="ExpandGroup">
+      <GroupStyle.ContainerStyle>
+        <Style TargetType="GroupItem">
+          <Setter Property="Template">
+            <Setter.Value>
+              <ControlTemplate TargetType="GroupItem">
+                <StackPanel>
+                  <ToggleButton x:Name="tog" Cursor="Hand" Focusable="False">
+                    <ToggleButton.Template>
+                      <ControlTemplate TargetType="ToggleButton">
+                        <Border Background="Transparent" Padding="8,6,0,6" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource Border}">
+                          <TextBlock>
+                            <Run x:Name="arrow" Text="▸  " Foreground="{DynamicResource Muted}"/><Run Text="{Binding Name, Mode=OneWay}" FontWeight="SemiBold"/><Run Text="   "/><Run Text="{Binding Items, Mode=OneWay, Converter={StaticResource GroupSummary}}" Foreground="{DynamicResource Muted}"/>
+                          </TextBlock>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                          <Trigger Property="IsChecked" Value="True"><Setter TargetName="arrow" Property="Text" Value="▾  "/></Trigger>
+                        </ControlTemplate.Triggers>
+                      </ControlTemplate>
+                    </ToggleButton.Template>
+                  </ToggleButton>
+                  <ItemsPresenter x:Name="items" Visibility="Collapsed"/>
+                </StackPanel>
+                <ControlTemplate.Triggers>
+                  <Trigger SourceName="tog" Property="IsChecked" Value="True"><Setter TargetName="items" Property="Visibility" Value="Visible"/></Trigger>
+                  <DataTrigger Binding="{Binding ItemCount}" Value="1">
+                    <Setter TargetName="tog" Property="Visibility" Value="Collapsed"/>
+                    <Setter TargetName="items" Property="Visibility" Value="Visible"/>
+                  </DataTrigger>
+                </ControlTemplate.Triggers>
+              </ControlTemplate>
+            </Setter.Value>
+          </Setter>
+        </Style>
+      </GroupStyle.ContainerStyle>
+    </GroupStyle>
+  </Window.Resources>
+
+  <Grid x:Name="Root">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition x:Name="SideCol" Width="230"/>
+      <ColumnDefinition/>
+    </Grid.ColumnDefinitions>
+
+    <DockPanel Background="{DynamicResource Surface}" ClipToBounds="True">
+      <DockPanel DockPanel.Dock="Top" Margin="16,18,10,14">
+        <Button DockPanel.Dock="Right" Content="&#xE790;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="14" Click="Theme_Click"
+                Padding="8,6" Margin="0" Background="Transparent" VerticalAlignment="Center" ToolTip="Aparência (tema)" WindowChrome.IsHitTestVisibleInChrome="True"/>
+        <Image Source="/Assets/icon_64x64.png" Width="30" Height="30" Margin="0,0,10,0" RenderOptions.BitmapScalingMode="HighQuality"/>
+        <TextBlock Text="Estoque" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+      </DockPanel>
+      <StackPanel DockPanel.Dock="Bottom" Margin="14,10,14,16">
+        <Button Content="+ Novo deck" Click="NewDeck_Click" Margin="0" Style="{StaticResource Primary}"/>
+        <Button Content="+ Binder / Box" Click="NewLoc_Click" Margin="0,6,0,0"/>
+      </StackPanel>
+      <ListBox x:Name="Nav" Background="Transparent" BorderThickness="0" Margin="10,0" SelectionChanged="Nav_SelectionChanged"
+               ScrollViewer.HorizontalScrollBarVisibility="Disabled"/>
+    </DockPanel>
+
+    <DockPanel Grid.Column="1" Margin="20,22,24,20">
+      <DockPanel DockPanel.Dock="Top">
+        <Button DockPanel.Dock="Left" Content="&#xE700;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Click="ToggleSide_Click"
+                Padding="9,7" Margin="0,2,14,0" VerticalAlignment="Top" ToolTip="Mostrar/esconder a barra lateral" Background="Transparent"
+                WindowChrome.IsHitTestVisibleInChrome="True"/>
+        <StackPanel>
+          <StackPanel Orientation="Horizontal">
+            <TextBlock x:Name="Header" FontSize="22" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <!-- ⋮ ao lado do nome do deck: exportar, copiar, sincronizar… -->
+            <Button x:Name="DeckMoreBtn" Content="⋮" FontSize="20" FontWeight="Bold" Padding="10,0,10,2" Margin="8,2,0,0" VerticalAlignment="Center"
+                    Background="Transparent" Click="DeckMore_Click" ToolTip="Mais opções" WindowChrome.IsHitTestVisibleInChrome="True"/>
+            <!-- Adicionar: traz carta nova (branco, borda, botão + escuro) -->
+            <Border x:Name="AddBox" Width="250" Height="32" Margin="28,2,0,0" VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True" Background="{DynamicResource Input}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="6">
+              <DockPanel>
+                <Border DockPanel.Dock="Left" Width="30" Background="{DynamicResource Accent}" CornerRadius="5,0,0,5">
+                  <TextBlock Text="&#xE710;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource OnAccent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Border>
+                <Grid Margin="9,0,6,0">
+                  <TextBox x:Name="AddText" TextChanged="AddText_Changed" PreviewKeyDown="AddText_PreviewKeyDown" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0"/>
+                  <TextBlock x:Name="AddHint" Text="Adicionar carta" Foreground="{DynamicResource Muted}" Margin="1,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+                  <Popup x:Name="AddPopup" PlacementTarget="{Binding ElementName=AddBox}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+                    <Border Background="{DynamicResource Surface}" BorderBrush="{DynamicResource Border}" BorderThickness="1" CornerRadius="6" Padding="4" Width="320" Margin="0,4,0,0">
+                      <ListBox x:Name="AddList" MaxHeight="320" BorderThickness="0" PreviewMouseLeftButtonUp="AddList_Click"/>
+                    </Border>
+                  </Popup>
+                </Grid>
+              </DockPanel>
+            </Border>
+          </StackPanel>
+          <TextBlock x:Name="Sub" Foreground="{DynamicResource Muted}" Margin="0,2,0,0"/>
+        </StackPanel>
+      </DockPanel>
+
+      <DockPanel DockPanel.Dock="Top" Margin="0,16,0,12">
+        <StackPanel x:Name="HomeBar" Orientation="Horizontal" DockPanel.Dock="Right">
+          <Button Content="Copiar buylist" Click="Buylist_Click" Style="{StaticResource Primary}" ToolTip="O que falta em todos os decks, descontando cópias livres"/>
+          <Button Content="Buylist LigaMagic" Click="BuylistLiga_Click" ToolTip="Mesma buylist, no formato da LigaMagic (sem arte)"/>
+          <Button Content="Adicionar lista" Click="AddList_Click" ToolTip="Adiciona no binder/box padrão"/>
+          <Button Content="Copiar coleção" Click="CopyAll_Click"/>
+        </StackPanel>
+        <StackPanel x:Name="DeckBar" Orientation="Horizontal" DockPanel.Dock="Right">
+          <Button Content="Copiar faltantes" Click="CopyMissing_Click" Style="{StaticResource Primary}"/>
+        </StackPanel>
+        <StackPanel x:Name="StoreBar" Orientation="Horizontal" DockPanel.Dock="Right">
+          <Button Content="Adicionar lista" Click="AddList_Click" Style="{StaticResource Primary}"/>
+        </StackPanel>
+        <StackPanel Orientation="Horizontal">
+          <!-- Buscar: filtra o que está na tela (cinza, lupa, sem borda) -->
+          <Border Width="220" Height="32" Background="{DynamicResource Chip}" CornerRadius="16" Padding="12,0,10,0">
+            <DockPanel>
+              <TextBlock DockPanel.Dock="Left" Text="&#xE721;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource Muted}" VerticalAlignment="Center" Margin="0,0,8,0"/>
+              <Grid>
+                <TextBox x:Name="Search" TextChanged="Filter_Changed" VerticalContentAlignment="Center" BorderThickness="0" Background="Transparent" Padding="0"/>
+                <TextBlock x:Name="SearchHint" Text="Filtrar" Foreground="{DynamicResource Muted}" Margin="1,0" VerticalAlignment="Center" IsHitTestVisible="False"/>
+              </Grid>
+            </DockPanel>
+          </Border>
+          <CheckBox x:Name="OnlyMissing" Content="Só em falta" Margin="14,0,0,0" VerticalAlignment="Center" Checked="Filter_Changed" Unchecked="Filter_Changed"/>
+        </StackPanel>
+      </DockPanel>
+
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition/>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition x:Name="PreviewCol" Width="300"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid>
+          <ScrollViewer x:Name="HomePanel" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="HomeContent"/>
+          </ScrollViewer>
+          <DockPanel x:Name="TableWrap">
+            <WrapPanel x:Name="SectorBar" DockPanel.Dock="Top" Margin="0,0,0,10" Visibility="Collapsed"/>
+            <TextBlock x:Name="EmptyHint" DockPanel.Dock="Top" Foreground="{DynamicResource Muted}" Margin="4,10,0,0" Visibility="Collapsed"/>
+            <StackPanel x:Name="Pager" DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0" Visibility="Collapsed">
+              <Button x:Name="PrevPage" Content="‹ Anterior" Click="PrevPage_Click"/>
+              <TextBlock x:Name="PageLabel" Foreground="{DynamicResource Muted}" VerticalAlignment="Center" Margin="12,0,6,0"/>
+              <Button x:Name="NextPage" Content="Próxima ›" Click="NextPage_Click"/>
+            </StackPanel>
+            <DataGrid x:Name="Table" AutoGeneratingColumn="Table_AutoGeneratingColumn" SelectionChanged="Table_SelectionChanged"
+                      VirtualizingPanel.IsVirtualizingWhenGrouping="True" VirtualizingPanel.VirtualizationMode="Recycling"/>
+          </DockPanel>
+          <!-- deck: grupos em colunas que se ajustam à largura (masonry) -->
+          <ScrollViewer x:Name="DeckScroll" VerticalScrollBarVisibility="Auto" SizeChanged="DeckScroll_SizeChanged" Visibility="Collapsed">
+            <StackPanel x:Name="DeckGrid" Margin="0,0,8,0"/>
+          </ScrollViewer>
+        </Grid>
+
+        <GridSplitter x:Name="Splitter" Grid.Column="1" Width="12" HorizontalAlignment="Center" VerticalAlignment="Stretch"
+                      Background="Transparent" ResizeBehavior="PreviousAndNext" Cursor="SizeWE" DragCompleted="Splitter_DragCompleted"
+                      ToolTip="Arraste para redimensionar a imagem"/>
+
+        <ScrollViewer x:Name="Preview" Grid.Column="2" VerticalScrollBarVisibility="Auto">
+          <StackPanel x:Name="PreviewStack" Margin="4,0,0,0">
+            <Image x:Name="CardImg" Stretch="Uniform"/>
+            <DockPanel Margin="0,10,0,0">
+              <Button x:Name="Flip" DockPanel.Dock="Right" Content="&#xE895;" FontFamily="Segoe Fluent Icons, Segoe MDL2 Assets" Click="Flip_Click" Padding="9,6" ToolTip="Virar carta" Visibility="Collapsed"/>
+              <Button x:Name="ArtBtn" Content="Alterar arte" Click="ChangeArt_Click" Margin="0" Visibility="Collapsed"/>
+            </DockPanel>
+            <TextBlock x:Name="ArtLabel" Foreground="{DynamicResource Muted}" HorizontalAlignment="Center" Margin="0,6,0,0" Text="Passe o mouse numa carta"/>
+
+          </StackPanel>
+        </ScrollViewer>
+      </Grid>
+    </DockPanel>
+    <!-- primeira abertura: boas-vindas + tema -->
+    <Grid x:Name="Welcome" Grid.ColumnSpan="2" Panel.ZIndex="5" Background="{DynamicResource Bg}" Visibility="Collapsed">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel x:Name="WelcomeContent" Width="780" HorizontalAlignment="Center" Margin="0,44,0,40"/>
+      </ScrollViewer>
+    </Grid>
+    <!-- aviso no canto com "Desfazer" -->
+    <Border x:Name="Toast" Grid.ColumnSpan="2" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,24,22"
+            Background="{DynamicResource Toast}" CornerRadius="8" Padding="16,10,10,10" Panel.ZIndex="20" Visibility="Collapsed">
+      <StackPanel Orientation="Horizontal">
+        <TextBlock x:Name="ToastText" Foreground="{DynamicResource OnToast}" VerticalAlignment="Center" MaxWidth="420" TextTrimming="CharacterEllipsis"/>
+        <Button x:Name="UndoBtn" Content="Desfazer" Click="Undo_Click" Margin="16,0,0,0" Padding="12,5"/>
+      </StackPanel>
+    </Border>
+    <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top" Panel.ZIndex="10">
+      <Button Content="&#xE921;" Style="{StaticResource CaptionBtn}" Click="Min_Click" ToolTip="Minimizar"/>
+      <Button x:Name="MaxBtn" Content="&#xE922;" Style="{StaticResource CaptionBtn}" Click="Max_Click" ToolTip="Maximizar"/>
+      <Button Content="&#xE8BB;" Style="{StaticResource CloseBtn}" Click="Close_Click" ToolTip="Fechar"/>
+    </StackPanel>
+  </Grid>
+</Window>
