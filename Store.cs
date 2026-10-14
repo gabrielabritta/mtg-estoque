@@ -375,9 +375,18 @@ public static class Store
     public static int Pullable(Data d, Location l) =>
         l.Wants.Where(w => w.Board != Boards.Maybe).Select(w => w.Card).Distinct(CI).Sum(c => Math.Min(Missing(d, l, c), Free(d, c)));
 
-    public static int PullFree(Data d, Location l) =>
-        l.Wants.Where(w => w.Board != Boards.Maybe).Select(w => w.Card).Distinct(CI).ToList()
-            .Sum(c => Pull(d, l, FreeStacks(d, c), c, DesiredOf(l, c), false, Missing(d, l, c)));
+    // Igual à revisão: usou a cópia da coleção → a arte dela passa a ser a do deck.
+    public static int PullFree(Data d, Location l)
+    {
+        int n = 0;
+        foreach (var c in l.Wants.Where(w => w.Board != Boards.Maybe).Select(w => w.Card).Distinct(CI).ToList())
+        {
+            int got = Pull(d, l, FreeStacks(d, c), c, DesiredOf(l, c), false, Missing(d, l, c));
+            if (got > 0) AcceptOwnedArt(d, l, c);
+            n += got;
+        }
+        return n;
+    }
 
     public static int Pull(Data d, Location l, IEnumerable<Stack> from, string card, string print, bool foil, int n)
     {
@@ -733,8 +742,8 @@ public static class Store
         AddStack(d, "Mox", "zzz/9", false, 1, "J", "");
         bool ownOk = AcceptOwnedArt(d, J) == 1 && DesiredOf(J, "Mox") == "" && DesiredOf(J, "Opal") == "bbb/2"; // Opal falta: continua querendo
         // Opal livre no binder: aparece como "dá pra puxar" e o botão traz pro deck
-        AddStack(d, "Opal", "bbb/2", false, 2, DefaultName, "");
-        ownOk &= Pullable(d, J) == 1 && PullFree(d, J) == 1 && InLoc(d, "Opal", "J") == 1 && Pullable(d, J) == 0;
+        AddStack(d, "Opal", "ccc/3", false, 2, DefaultName, "");
+        ownOk &= Pullable(d, J) == 1 && PullFree(d, J) == 1 && InLoc(d, "Opal", "J") == 1 && Pullable(d, J) == 0 && DesiredOf(J, "Opal") == "";
 
         return parseOk && boardsOk && fmtOk && migOk && buyOk && wantsOk && moveOk && fillOk && csvOk && linesOk && traceOk && logOk && secOk && artOk && ownOk && Types.LigaTest() && Liga.SelfTest();
     }
