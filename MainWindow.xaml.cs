@@ -356,7 +356,9 @@ public partial class MainWindow : Window
         bool homeTiles = mode == "home" && q == "";
 
         Vis(SearchHint, q == "");
-        Vis(HomeBar, mode is "home" or "all"); Vis(DeckBar, mode == "deck"); Vis(StoreBar, mode == "store");
+        Vis(HomeBar, mode is "home" or "all"); Vis(DeckBar, mode == "deck");
+        int pullable = mode == "deck" && Cur != null ? Store.Pullable(d, Cur) : 0;
+        Vis(PullFreeBtn, pullable > 0); PullFreeBtn.Content = $"Puxar {pullable} livre(s)"; Vis(StoreBar, mode == "store");
         Vis(OnlyMissing, mode == "deck"); Vis(AddBox, mode is "deck" or "store"); Vis(SectorBar, mode is "store" or "all" or "log");
 
         Vis(Pager, false);
@@ -649,7 +651,7 @@ public partial class MainWindow : Window
         if (r.S == null)
         {
             if (r.Falta == 0) return (null, false, "");
-            if (r.Livres > 0) return (DotRed, false, $"Falta {r.Falta} · tem {r.Livres} livre — botão direito → Já tenho");
+            if (r.Livres > 0) return (Theme.B("DotGreen"), false, $"Falta {r.Falta} · tem {r.Livres} livre na coleção — \"Puxar livres\" traz pro deck");
             if (Store.Have(d, r.Carta) > 0) return (DotAmber, false, $"Falta {r.Falta} · você tem, mas todas estão em uso em outros decks (entra na buylist)");
             return (DotRed, false, $"Falta {r.Falta} · você não tem (entra na buylist)");
         }
@@ -765,6 +767,14 @@ public partial class MainWindow : Window
         foreach (var r in deckSel.ToList()) if (r.Board != board) Store.SetBoard(l, r.Carta, r.Board, board, r.Qtd);
         deckSel.Clear();
         Commit();
+    }
+
+    void PullFree_Click(object s, RoutedEventArgs e)
+    {
+        var snap = Store.Snapshot(d);
+        int n = Store.PullFree(d, Cur!);
+        Commit();
+        ShowToast($"{n} carta(s) puxada(s) da coleção pro deck", snap);
     }
 
     void Remove_Click(object s, RoutedEventArgs e)

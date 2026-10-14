@@ -371,6 +371,14 @@ public static class Store
         d.Stacks.Where(s => Same(s.Card, card) && !Same(s.Loc, l.Name) && IsDeck(d, s.Loc));
 
     // Traz até n cópias de 'from' pro deck, preferindo a mesma arte/foil. A cópia física mantém a arte dela.
+    // Cartas que faltam no deck e têm cópia livre (fora de decks): quantas dá pra puxar / puxa todas.
+    public static int Pullable(Data d, Location l) =>
+        l.Wants.Where(w => w.Board != Boards.Maybe).Select(w => w.Card).Distinct(CI).Sum(c => Math.Min(Missing(d, l, c), Free(d, c)));
+
+    public static int PullFree(Data d, Location l) =>
+        l.Wants.Where(w => w.Board != Boards.Maybe).Select(w => w.Card).Distinct(CI).ToList()
+            .Sum(c => Pull(d, l, FreeStacks(d, c), c, DesiredOf(l, c), false, Missing(d, l, c)));
+
     public static int Pull(Data d, Location l, IEnumerable<Stack> from, string card, string print, bool foil, int n)
     {
         int got = 0;
@@ -724,6 +732,9 @@ public static class Store
         d.Locations.Add(J);
         AddStack(d, "Mox", "zzz/9", false, 1, "J", "");
         bool ownOk = AcceptOwnedArt(d, J) == 1 && DesiredOf(J, "Mox") == "" && DesiredOf(J, "Opal") == "bbb/2"; // Opal falta: continua querendo
+        // Opal livre no binder: aparece como "dá pra puxar" e o botão traz pro deck
+        AddStack(d, "Opal", "bbb/2", false, 2, DefaultName, "");
+        ownOk &= Pullable(d, J) == 1 && PullFree(d, J) == 1 && InLoc(d, "Opal", "J") == 1 && Pullable(d, J) == 0;
 
         return parseOk && boardsOk && fmtOk && migOk && buyOk && wantsOk && moveOk && fillOk && csvOk && linesOk && traceOk && logOk && secOk && artOk && ownOk && Types.LigaTest() && Liga.SelfTest();
     }

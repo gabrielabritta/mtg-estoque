@@ -161,6 +161,7 @@
         </StackPanel>
         <StackPanel x:Name="DeckBar" Orientation="Horizontal" DockPanel.Dock="Right">
           <Button Content="Copiar faltantes" Click="CopyMissing_Click" Style="{StaticResource Primary}"/>
+          <Button x:Name="PullFreeBtn" Click="PullFree_Click" ToolTip="Move pro deck as cópias livres (binders/boxes) das cartas que faltam"/>
         </StackPanel>
         <StackPanel x:Name="StoreBar" Orientation="Horizontal" DockPanel.Dock="Right">
           <Button Content="Adicionar lista" Click="AddList_Click" Style="{StaticResource Primary}"/>
