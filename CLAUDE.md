@@ -15,8 +15,9 @@ dist\MtgEstoque.exe --test        # self-test (Store.SelfTest + Types.LigaTest +
 - **Instalador** (só quando o Gabriel pedir): publish autocontido em `publish\` e Inno Setup:
   ```
   dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -o publish
-  "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss    # -> installer\MTG-Estoque-Setup-1.0.exe (~57 MB)
+  "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss    # -> installer\MTG-Estoque-Setup-<versão>.exe (~57 MB)
   ```
+  - **Nova versão**: subir `<Version>` no csproj **e** `AppVersion` no installer.iss (iguais), gerar, `gh release create vX.Y installer\MTG-Estoque-Setup-X.Y.exe installer\mtg-estoque-chrome-extension.zip` — os apps instalados avisam sozinhos. Repo público: github.com/gabrielabritta/mtg-estoque.
   Instala por usuário (sem admin) e pergunta a pasta de dados → grava `datadir.txt` ao lado do exe.
 - Flags de diagnóstico (não mexem nos dados): `--parse <arq> <saida>`, `--mox <url> <saida>`,
   `--liga <deck> <saida>` (export LigaMagic), `--ligaresolve <compra.txt> <saida>` (identifica artes).
@@ -34,7 +35,8 @@ dist\MtgEstoque.exe --test        # self-test (Store.SelfTest + Types.LigaTest +
 | `Moxfield.cs` | Import de deck por link (API interna `api2.moxfield.com/v3/decks/all/{id}`; fallback `curl.exe` se o HttpClient levar 403) |
 | `Liga.cs` | Import de compras da LigaMagic + diálogo de conferência |
 | `chrome-extension/` | Extensão pessoal do Chrome (MV3, sem compactação) "Copiar compras (MTG Estoque)" — ver abaixo |
-| `installer.iss` | Inno Setup |
+| `installer.iss` | Inno Setup (atualização: pula a página de dados se já existe `datadir.txt`) |
+| `Update.cs` | Ao abrir, consulta a última release no GitHub (API pública) e oferece baixar/rodar o Setup `/SILENT` |
 | `BACKLOG.md` | Pendências priorizadas da revisão de UI/UX |
 
 ## Modelo de dados (`%APPDATA%\MtgEstoque\data.json`, ou pasta do `datadir.txt`)

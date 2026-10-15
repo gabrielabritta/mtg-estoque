@@ -3,10 +3,11 @@
 ; Instala só para o usuário atual (sem pedir admin) e pergunta onde guardar a coleção e o cache.
 
 #define AppName "MTG Estoque"
-#define AppVersion "1.1"
+#define AppVersion "1.2"
 #define AppExe "MtgEstoque.exe"
 
 [Setup]
+CloseApplications=force
 AppId={{6E3C2B7A-5D1F-4C9E-9B2A-MTGESTOQUE01}
 AppName={#AppName}
 AppVersion={#AppVersion}
@@ -40,7 +41,7 @@ Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#AppExe}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExe}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#AppExe}"; Description: "Abrir o {#AppName}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#AppExe}"; Description: "Abrir o {#AppName}"; Flags: nowait postinstall
 
 [UninstallDelete]
 ; a coleção e o cache NÃO são apagados ao desinstalar — só o arquivo que diz onde eles ficam
@@ -63,9 +64,20 @@ begin
   DataPage.Values[0] := ExpandConstant('{userappdata}\MtgEstoque');
 end;
 
+// atualização (já tem datadir.txt): não pergunta de novo nem troca a pasta
+function Upgrade: Boolean;
+begin
+  Result := FileExists(AddBackslash(WizardDirValue) + 'datadir.txt');
+end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+begin
+  Result := (PageID = DataPage.ID) and Upgrade;
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
-  if CurStep = ssPostInstall then
+  if (CurStep = ssPostInstall) and not Upgrade then
   begin
     ForceDirectories(DataPage.Values[0]);
     SaveStringToFile(ExpandConstant('{app}\datadir.txt'), DataPage.Values[0], False);

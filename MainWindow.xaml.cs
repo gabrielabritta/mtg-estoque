@@ -36,6 +36,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        ContentRendered += async (_, _) => await Update.Check(this);
         // hover numa linha da tabela já mostra a carta no painel
         var rs = new Style(typeof(DataGridRow));
         rs.Setters.Add(new EventSetter(MouseEnterEvent, new MouseEventHandler((s, _) => ShowRow(((DataGridRow)s).Item))));
