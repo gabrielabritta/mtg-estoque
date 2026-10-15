@@ -3,7 +3,7 @@
 ; Instala só para o usuário atual (sem pedir admin) e pergunta onde guardar a coleção e o cache.
 
 #define AppName "MTG Estoque"
-#define AppVersion "1.0"
+#define AppVersion "1.1"
 #define AppExe "MtgEstoque.exe"
 
 [Setup]
